@@ -395,6 +395,13 @@ export default function IOChatApp() {
       setToken(res.data.token);
       setUser(res.data.user);
       localStorage.setItem('token', res.data.token);
+
+      // VULNERABLE: Open Redirect after login/register without URL validation
+      const params = new URLSearchParams(window.location.search);
+      const redirectUrl = params.get('redirect') || params.get('next');
+      if (redirectUrl) {
+        window.location.href = redirectUrl;
+      }
     } catch (err) {
       setErrorMsg(err.response?.data?.error || "Auth Failed");
     }
