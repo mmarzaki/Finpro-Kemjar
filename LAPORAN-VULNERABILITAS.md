@@ -51,6 +51,23 @@ No credentials were captured or transmitted.
 
 Artinya halaman ini murni *visual clone* untuk mendemonstrasikan risiko, bukan alat pencurian kredensial.
 
+> **Clarification — kenapa `link.evil` ada di dalam repo?**
+> Pada serangan nyata, halaman phishing **tidak pernah ditaruh di source code aplikasi korban**.
+> Penyerang meng-host halaman tiruan itu di domain/server miliknya sendiri (mis.
+> `link-evil.com`, `login-iochat.site`, atau hosting gratis). Kerentanan di aplikasi korban
+> hanya berupa *endpoint redirect yang tidak divalidasi* — itulah "jembatan" yang membuat
+> URL tetap terlihat berasal dari domain tepercaya sebelum korban dialihkan.
+>
+> Di project ini, route `/link.evil` sengaja dibuat sebagai **stand-in lokal** untuk
+> "attacker-controlled external site" karena tidak memungkinkan mendaftarkan domain eksternal
+> dalam tugas kampus. Dengan begitu seluruh rantai bisa diuji di `localhost:3000` +
+> `localhost:4000`. Saat menulis laporan nyata, sebutlah halaman ini sebagai situs eksternal
+> milik penyerang, bukan bagian dari aplikasi I/O Chat.
+>
+> Alternatif demo yang lebih realistis: jalankan server kedua di `localhost:3001` sebagai
+> "domain penyerang" lalu arahkan `?url=http://localhost:3001/...`, atau pakai dua hostname
+> lokal lewat file hosts (`io-chat.test` vs `link.evil.test`).
+
 #### b) Tiga jalur redirect yang tidak divalidasi
 
 1. **Frontend – helper redirect**
