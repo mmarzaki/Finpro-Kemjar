@@ -7,13 +7,6 @@ const router = express.Router();
 router.post('/register', register);
 router.post('/login', login);
 
-// VULNERABLE: Open Redirect — URL tujuan tidak divalidasi sama sekali.
-// Penyerang bisa memakai endpoint sah ini untuk mengalihkan korban ke domain js.
-router.get('/redirect', (req, res) => {
-  const target = req.query.url || req.query.redirect || req.query.next || '/';
-  res.redirect(target);
-});
-
 router.get('/me', authMiddleware, getMe);
 router.get('/search', authMiddleware, searchUsers);
 router.put('/profile', authMiddleware, updateProfile);

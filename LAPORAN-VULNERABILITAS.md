@@ -2,114 +2,101 @@
 
 > **Catatan penting:** Seluruh perubahan di bawah dibuat **hanya untuk keperluan belajar/demo lokal**
 > pada aplikasi I/O Chat yang dijalankan sendiri (localhost). Tidak ada kredensial yang
-> dikumpulkan, disimpan, atau dikirim ke server mana pun dari halaman simulasi `link.evil`.
+> dikumpulkan, disimpan, atau dikirim ke server mana pun dari project simulasi `evil redirect`.
 > Jangan menerapkan konfigurasi ini pada aplikasi yang dapat diakses publik.
 
 ---
 
 ## 1. Ringkasan Perubahan
 
+Open Redirect sekarang berada di **project/deploy terpisah** (`evil redirect/`), sedangkan
+`IO-Chat` dibersihkan dari semua jalur redirect. DoS tetap berada di backend `IO-Chat`.
+
 | No | File | Perubahan | Jenis |
 |----|------|-----------|-------|
-| 1 | `IO-Chat-Frontend/src/app/link.evil/page.js` | **Baru.** Halaman login/register palsu yang tampilan visualnya sengaja dibuat identik dengan halaman auth asli di `page.js`. | Open Redirect / Phishing demo |
-| 2 | `IO-Chat-Frontend/src/app/redirect/page.js` | **Baru.** Route `/redirect?url=...` yang melakukan redirect tanpa validasi. | Open Redirect |
-| 3 | `IO-Chat-Frontend/src/app/page.js` | Menambahkan redirect pasca-login/register dari parameter `?redirect=` / `?next=`. | Open Redirect |
-| 4 | `IO-Chat-Backend/src/routes/auth.js` | Menambahkan `GET /api/auth/redirect?url=...` yang memakai `res.redirect()` langsung. | Open Redirect |
-| 5 | `IO-Chat-Backend/src/routes/debug.js` | **Baru.** Endpoint `/api/debug/bcrypt?cost=` dan `/api/debug/cpu?iterations=` yang memblokir event loop. | DoS |
-| 6 | `IO-Chat-Backend/src/routes/index.js` | Mendaftarkan router `debug`. | DoS |
-| 7 | `IO-Chat-Backend/src/server.js` | Rate limiter dinonaktifkan; batas body JSON dinaikkan `5mb → 50mb`. | DoS |
+| 1 | `evil redirect/` (project baru) | Salinan visual halaman login I/O Chat + route `/redirect?url=...` yang melakukan redirect tanpa validasi. Deploy terpisah. | Open Redirect |
+| 2 | `IO-Chat-Frontend/src/app/link.evil/` | **Dihapus.** Halaman login palsu tidak lagi berada di dalam aplikasi asli. | Pembersihan |
+| 3 | `IO-Chat-Frontend/src/app/redirect/` | **Dihapus.** Route `/redirect` milik aplikasi asli dihapus. | Pembersihan |
+| 4 | `IO-Chat-Frontend/src/app/page.js` | Redirect pasca-login/register (`?redirect=` / `?next=`) **dihapus**. | Pembersihan |
+| 5 | `IO-Chat-Backend/src/routes/auth.js` | Endpoint `GET /api/auth/redirect` **dihapus**. | Pembersihan |
+| 6 | `IO-Chat-Backend/src/routes/debug.js` | **Baru.** Endpoint `/api/debug/bcrypt?cost=` dan `/api/debug/cpu?iterations=` yang memblokir event loop. | DoS |
+| 7 | `IO-Chat-Backend/src/routes/index.js` | Mendaftarkan router `debug`. | DoS |
+| 8 | `IO-Chat-Backend/src/server.js` | Rate limiter dinonaktifkan; batas body JSON dinaikkan `5mb → 50mb`. | DoS |
 
 ---
 
 ## 2. Open Redirect
 
-### 2.1 Apa yang diubah
+### 2.1 Arsitektur dua deploy
 
-#### a) Halaman tujuan palsu (`link.evil`)
-Dibuat route App Router baru:
+Open Redirect sengaja dipisahkan dari aplikasi utama agar skenarionya menyerupai
+serangan nyata: aplikasi I/O Chat yang asli bersih, sedangkan halaman penipu
+dihosting di project/domain milik penyerang.
 
-```
-IO-Chat-Frontend/src/app/link.evil/page.js   →  http://localhost:3000/link.evil
-```
+#### a) Deploy 1 — `IO-Chat` (aplikasi asli)
 
-Isinya adalah **salinan persis** dari blok UI autentikasi pada `src/app/page.js` (baris ~494–552):
+Semua jalur Open Redirect dihapus agar aplikasi utama tidak lagi bisa dipakai
+sebagai "jembatan" redirect:
 
-- struktur `div` + kelas Tailwind yang sama (`flex items-center justify-center h-screen bg-gray-100 ...`),
-- kartu `rounded-2xl shadow-2xl w-96`,
-- header merah `bg-red-600` dengan teks **"I/O Chat"** dan **"Welcome back!" / "Create an account"**,
-- input Email, Username (saat register), Password,
-- tombol **Login / Register**,
-- tautan **"Need an account? Register" / "Already have an account? Login"**,
-- tema gelap & accent color dari `localStorage` (`isDarkMode`, `selectedAccent`) mengikuti page asli.
+- `IO-Chat-Frontend/src/app/link.evil/` dihapus.
+- `IO-Chat-Frontend/src/app/redirect/` dihapus.
+- Redirect pasca-login/register dari parameter `?redirect=` / `?next=` di
+  `handleAuth()` (`src/app/page.js`) dihapus.
+- Endpoint backend `GET /api/auth/redirect` (`src/routes/auth.js`) dihapus.
 
-Perbedaan satu-satunya: **tidak ada request jaringan**. Jika form disubmit, hanya muncul pesan:
+#### b) Deploy 2 — `evil redirect/` (project baru)
 
-```
-Open Redirect Simulation (link.evil): Form submitted on spoofed page.
-No credentials were captured or transmitted.
-```
+Project Next.js terpisah di root repository. Saat dijalankan lokal memakai
+port **3001**, sehingga bisa diuji berdampingan dengan I/O Chat di port 3000.
 
-Artinya halaman ini murni *visual clone* untuk mendemonstrasikan risiko, bukan alat pencurian kredensial.
+Isi project:
 
-> **Clarification — kenapa `link.evil` ada di dalam repo?**
-> Pada serangan nyata, halaman phishing **tidak pernah ditaruh di source code aplikasi korban**.
-> Penyerang meng-host halaman tiruan itu di domain/server miliknya sendiri (mis.
-> `link-evil.com`, `login-iochat.site`, atau hosting gratis). Kerentanan di aplikasi korban
-> hanya berupa *endpoint redirect yang tidak divalidasi* — itulah "jembatan" yang membuat
-> URL tetap terlihat berasal dari domain tepercaya sebelum korban dialihkan.
->
-> Di project ini, route `/link.evil` sengaja dibuat sebagai **stand-in lokal** untuk
-> "attacker-controlled external site" karena tidak memungkinkan mendaftarkan domain eksternal
-> dalam tugas kampus. Dengan begitu seluruh rantai bisa diuji di `localhost:3000` +
-> `localhost:4000`. Saat menulis laporan nyata, sebutlah halaman ini sebagai situs eksternal
-> milik penyerang, bukan bagian dari aplikasi I/O Chat.
->
-> Alternatif demo yang lebih realistis: jalankan server kedua di `localhost:3001` sebagai
-> "domain penyerang" lalu arahkan `?url=http://localhost:3001/...`, atau pakai dua hostname
-> lokal lewat file hosts (`io-chat.test` vs `link.evil.test`).
-
-#### b) Tiga jalur redirect yang tidak divalidasi
-
-1. **Frontend – helper redirect**
-   `src/app/redirect/page.js` mengambil `url`, `redirect`, atau `next` dari query string lalu
-   `window.location.replace(target)` tanpa mengecek origin/domain.
-
-2. **Frontend – setelah login/register berhasil**
-   Di `handleAuth()` (`src/app/page.js`), setelah token tersimpan:
-
-   ```js
-   const params = new URLSearchParams(window.location.search);
-   const redirectUrl = params.get('redirect') || params.get('next');
-   if (redirectUrl) window.location.href = redirectUrl;
-   ```
-
-3. **Backend – endpoint resmi**
-   `GET /api/auth/redirect?url=<target>` memanggil `res.redirect(target)` apa adanya.
+- **`/` dan `/login`** — salinan visual halaman login/register I/O Chat:
+  kartu `w-96`, header merah `bg-red-600` bertuliskan **"I/O Chat"**,
+  teks **"Welcome back!" / "Create an account"**, input Email, Username
+  (saat register), Password, tombol **Login / Register**, tautan toggle
+  register/login, serta dark mode & accent color dari `localStorage`.
+- **`/redirect?url=...`** — route **Open Redirect**. Menerima `url`,
+  `redirect`, atau `next` dari query string lalu memanggil
+  `window.location.replace(target)` tanpa validasi origin/domain.
+  Tujuan default adalah `NEXT_PUBLIC_IOCHAT_LOGIN_URL`
+  (default `http://localhost:3000`, yaitu halaman login I/O Chat asli).
+- Form login tiruan **tidak mengirim kredensial** ke mana pun. Saat disubmit,
+  halaman hanya melakukan redirect ke parameter URL atau ke login I/O Chat asli.
 
 ### 2.2 Contoh PoC (lokal)
 
-Dengan frontend di `localhost:3000` dan backend di `localhost:4000`:
+Dengan I/O Chat di `localhost:3000` dan `evil redirect` di `localhost:3001`:
 
 ```
-# Melalui route redirect frontend
-http://localhost:3000/redirect?url=http://localhost:3000/link.evil
+# Halaman login tiruan (bait)
+http://localhost:3001/
 
-# Melalui halaman login (setelah kredensial valid)
-http://localhost:3000/?redirect=http://localhost:3000/link.evil
+# Open Redirect langsung ke halaman login I/O Chat asli
+http://localhost:3001/redirect?url=http://localhost:3000
 
-# Melalui backend
-http://localhost:4000/api/auth/redirect?url=http://localhost:3000/link.evil
+# Open Redirect ke domain sembarang (tanpa validasi)
+http://localhost:3001/redirect?url=https://example.com
+
+# Redirect setelah submit form login tiruan
+http://localhost:3001/?redirect=https://example.com
 ```
 
-Ketiga URL tersebut akhirnya menampilkan halaman `link.evil` yang tampak sama persis dengan
-halaman login I/O Chat asli. Dalam skenario nyata, penyerang mengganti `localhost:3000`
-dengan domain miliknya — inilah yang mendemonstrasikan bahaya Open Redirect.
+Alur phishing yang didemonstrasikan:
+
+1. Korban membuka link ke domain penyerang (`localhost:3001`).
+2. Korban melihat halaman login yang tampak identik dengan I/O Chat.
+3. Saat korban menekan **Login**, halaman mengalihkan ke halaman login asli
+   (`localhost:3000`) atau ke URL apa pun yang dipilih penyerang.
+
+Dalam skenario nyata, penyerang mengganti `localhost:3001` dengan domain
+miliknya dan `localhost:3000` dengan domain I/O Chat yang asli.
 
 ### 2.3 Dampak
 
 - Korban melihat halaman login yang dipercayanya, padahal berada di domain lain.
 - Dapat dipakai sebagai batu loncatan phishing, OAuth token leakage, dan malware delivery.
-- Endpoint backend yang terbuka juga bisa dipakai pihak ketiga sebagai "redirector" generik.
+- Endpoint `/redirect` di project penyerang juga bisa dipakai sebagai "redirector" generik.
 
 ---
 
@@ -168,14 +155,22 @@ cd IO-Chat-Backend
 npm install
 npm run dev        # http://localhost:4000
 
-# Frontend (terminal lain)
+# Frontend I/O Chat (terminal lain)
 cd IO-Chat-Frontend
 npm install
 npm run dev        # http://localhost:3000
+
+# Project evil redirect (terminal ketiga)
+cd "evil redirect"
+npm install
+npm run dev        # http://localhost:3001
 ```
 
 Buka URL PoC pada browser. Untuk mengamati efek DoS, jalankan salah satu `curl` di atas lalu
 coba akses `http://localhost:4000/api/auth/me` dari tab lain — respons akan tertunda.
+
+Untuk demo Open Redirect, buka `http://localhost:3001/` (halaman login tiruan) atau
+`http://localhost:3001/redirect?url=https://example.com`.
 
 ---
 
@@ -190,8 +185,8 @@ Bagian ini sengaja ditambahkan agar laporan lengkap sebagai materi belajar.
 - Di backend, tolak URL dengan scheme selain `http/https` dan domain di luar allowlist.
 - Tambahkan header `Referrer-Policy: no-referrer` dan `Content-Security-Policy` untuk mengurangi dampak.
 
-### Halaman `link.evil`
-- Hapus route simulasi setelah demo selesai.
+### Project `evil redirect`
+- Hapus project simulasi setelah demo selesai.
 - Jangan pernah menaruh form yang mengirim kredensial ke domain di luar aplikasi.
 - Edukasi pengguna: periksa hostname di address bar sebelum login.
 
@@ -209,8 +204,9 @@ Bagian ini sengaja ditambahkan agar laporan lengkap sebagai materi belajar.
 
 Perubahan di atas menciptakan dua kelas kerentanan yang mudah didemonstrasikan:
 
-1. **Open Redirect** — tiga jalur (frontend helper, pasca-login, backend endpoint) mengarah ke
-   `link.evil`, yaitu halaman login/register yang identik secara visual dengan halaman asli.
+1. **Open Redirect** — berada di project/deploy terpisah `evil redirect`, yang memuat salinan
+   visual halaman login I/O Chat dan route `/redirect?url=...` tanpa validasi.
+   Aplikasi `IO-Chat` sendiri sudah dibersihkan dari jalur redirect tersebut.
 2. **DoS** — event loop dapat diblokir melalui endpoint debug, ditambah rate limiting yang mati
    dan batas body yang diperlonggar.
 
