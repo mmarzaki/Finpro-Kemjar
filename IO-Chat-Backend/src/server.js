@@ -4,18 +4,15 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 import routes from './routes/index.js';
-import { initDb } from './database/index.js';
 
 dotenv.config();
 
 // Vercel menyetel VERCEL=1 / VERCEL_ENV. Pakai keduanya supaya deteksi aman.
 const isVercel = Boolean(process.env.VERCEL || process.env.VERCEL_ENV);
 
-// Di Vercel, tabel sudah dibuat lewat database_dump.sql di SQL Editor Neon.
-// Melewati initDb() menghindari query tambahan saat cold start.
-if (!isVercel) {
-  initDb();
-}
+// Catatan: skema tabel dibuat sekali lewat database_dump.sql di SQL Editor Neon.
+// initDb() sengaja TIDAK dipanggil supaya tidak ada query background yang
+// menyita koneksi pool saat cold start (menyebabkan 504 di serverless).
 
 const app = express();
 

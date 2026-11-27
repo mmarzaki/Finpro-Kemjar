@@ -15,7 +15,7 @@ const pool = new Pool({
   connectionTimeoutMillis: 10000,
   query_timeout: 15000,
   idleTimeoutMillis: 30000,
-  max: isServerless ? 1 : 10
+  max: isServerless ? 5 : 10
 });
 
 export const query = (text, params) => pool.query(text, params);
