@@ -24,7 +24,8 @@ export const register = async (req, res) => {
         if (err.code === '23505') { // unique violation
             return res.status(409).json({ error: 'Email or username already exists' });
         }
-        res.status(500).json({ error: 'Server error' });
+        console.error('[register] error:', err);
+        res.status(500).json({ error: 'Server error', details: err.message });
     }
 };
 
@@ -49,7 +50,8 @@ export const login = async (req, res) => {
 
         res.json({ user, token });
     } catch (err) {
-        res.status(500).json({ error: 'Server error' });
+        console.error('[login] error:', err);
+        res.status(500).json({ error: 'Server error', details: err.message });
     }
 };
 

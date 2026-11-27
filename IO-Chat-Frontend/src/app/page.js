@@ -396,7 +396,7 @@ export default function IOChatApp() {
       setUser(res.data.user);
       localStorage.setItem('token', res.data.token);
     } catch (err) {
-      setErrorMsg(err.response?.data?.error || "Auth Failed");
+      setErrorMsg(err.response?.data?.details || err.response?.data?.error || "Auth Failed");
     }
   };
 
