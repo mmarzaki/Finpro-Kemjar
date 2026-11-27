@@ -4,7 +4,8 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const isServerless = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+const isServerless = Boolean(process.env.VERCEL || process.env.VERCEL_ENV) ||
+  process.env.NODE_ENV === 'production';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,

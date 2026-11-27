@@ -8,9 +8,12 @@ import { initDb } from './database/index.js';
 
 dotenv.config();
 
+// Vercel menyetel VERCEL=1 / VERCEL_ENV. Pakai keduanya supaya deteksi aman.
+const isVercel = Boolean(process.env.VERCEL || process.env.VERCEL_ENV);
+
 // Di Vercel, tabel sudah dibuat lewat database_dump.sql di SQL Editor Neon.
 // Melewati initDb() menghindari query tambahan saat cold start.
-if (process.env.VERCEL !== '1') {
+if (!isVercel) {
   initDb();
 }
 
@@ -37,7 +40,7 @@ app.use('/api', routes);
 
 // Vercel tidak mendukung koneksi WebSocket persisten.
 // Socket.IO (dan Redis yang dipakainya) hanya dijalankan saat server lokal / non-Vercel.
-if (process.env.VERCEL !== '1') {
+if (!isVercel) {
   const httpServer = http.createServer(app);
 
   import('./sockets/index.js')

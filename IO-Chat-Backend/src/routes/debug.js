@@ -4,6 +4,16 @@ import { query } from '../database/index.js';
 
 const router = express.Router();
 
+// Diagnostic ringan: tidak menyentuh DB sama sekali.
+router.get('/ping', (req, res) => {
+  res.json({
+    pong: true,
+    vercel: process.env.VERCEL || null,
+    hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
+    hasJwtSecret: Boolean(process.env.JWT_SECRET)
+  });
+});
+
 // Diagnostic: cek apakah koneksi DATABASE_URL hidup.
 router.get('/db', async (req, res) => {
   try {
