@@ -6,11 +6,31 @@ const router = express.Router();
 
 // Diagnostic ringan: tidak menyentuh DB sama sekali.
 router.get('/ping', (req, res) => {
+  let dbInfo = { present: Boolean(process.env.DATABASE_URL) };
+
+  if (process.env.DATABASE_URL) {
+    try {
+      const u = new URL(process.env.DATABASE_URL);
+      dbInfo = {
+        present: true,
+        protocol: u.protocol,
+        host: u.host,
+        database: u.pathname,
+        params: u.search,
+        passwordLength: u.password.length
+      };
+    } catch (err) {
+      dbInfo = { present: true, parseError: err.message };
+    }
+  }
+
   res.json({
+    version: 'serverless-v3',
     pong: true,
     vercel: process.env.VERCEL || null,
     hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
-    hasJwtSecret: Boolean(process.env.JWT_SECRET)
+    hasJwtSecret: Boolean(process.env.JWT_SECRET),
+    dbInfo
   });
 });
 
