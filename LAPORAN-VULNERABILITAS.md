@@ -2,19 +2,19 @@
 
 > **Catatan penting:** Seluruh perubahan di bawah dibuat **hanya untuk keperluan belajar/demo lokal**
 > pada aplikasi I/O Chat yang dijalankan sendiri (localhost). Tidak ada kredensial yang
-> dikumpulkan, disimpan, atau dikirim ke server mana pun dari project simulasi `evil redirect`.
+> dikumpulkan, disimpan, atau dikirim ke server mana pun dari project simulasi `evil-redirect`.
 > Jangan menerapkan konfigurasi ini pada aplikasi yang dapat diakses publik.
 
 ---
 
 ## 1. Ringkasan Perubahan
 
-Open Redirect sekarang berada di **project/deploy terpisah** (`evil redirect/`), sedangkan
-`IO-Chat` dibersihkan dari semua jalur redirect. DoS tetap berada di backend `IO-Chat`.
+Open Redirect sekarang berada di folder tersendiri di dalam repository `IO-Chat` (`evil-redirect/`), sedangkan
+aplikasi utama `IO-Chat-Frontend` dibersihkan dari semua jalur redirect. DoS tetap berada di backend `IO-Chat`.
 
 | No | File | Perubahan | Jenis |
 |----|------|-----------|-------|
-| 1 | `evil redirect/` (project baru) | Salinan visual halaman login I/O Chat + route `/redirect?url=...` yang melakukan redirect tanpa validasi. Deploy terpisah. | Open Redirect |
+| 1 | `evil-redirect/` (folder baru) | Salinan visual halaman login I/O Chat + route `/redirect?url=...` yang melakukan redirect tanpa validasi. Dideploy sebagai Vercel project terpisah dari satu repo. | Open Redirect |
 | 2 | `IO-Chat-Frontend/src/app/link.evil/` | **Dihapus.** Halaman login palsu tidak lagi berada di dalam aplikasi asli. | Pembersihan |
 | 3 | `IO-Chat-Frontend/src/app/redirect/` | **Dihapus.** Route `/redirect` milik aplikasi asli dihapus. | Pembersihan |
 | 4 | `IO-Chat-Frontend/src/app/page.js` | Redirect pasca-login/register (`?redirect=` / `?next=`) **dihapus**. | Pembersihan |
@@ -44,7 +44,7 @@ sebagai "jembatan" redirect:
   `handleAuth()` (`src/app/page.js`) dihapus.
 - Endpoint backend `GET /api/auth/redirect` (`src/routes/auth.js`) dihapus.
 
-#### b) Deploy 2 — `evil redirect/` (project baru)
+#### b) Deploy 2 — `evil-redirect/` (project baru)
 
 Project Next.js terpisah di root repository. Saat dijalankan lokal memakai
 port **3001**, sehingga bisa diuji berdampingan dengan I/O Chat di port 3000.
@@ -66,7 +66,7 @@ Isi project:
 
 ### 2.2 Contoh PoC (lokal)
 
-Dengan I/O Chat di `localhost:3000` dan `evil redirect` di `localhost:3001`:
+Dengan I/O Chat di `localhost:3000` dan `evil-redirect` di `localhost:3001`:
 
 ```
 # Halaman login tiruan (bait)
@@ -160,8 +160,8 @@ cd IO-Chat-Frontend
 npm install
 npm run dev        # http://localhost:3000
 
-# Project evil redirect (terminal ketiga)
-cd "evil redirect"
+# Project evil-redirect (terminal ketiga)
+cd "evil-redirect"
 npm install
 npm run dev        # http://localhost:3001
 ```
@@ -185,7 +185,7 @@ Bagian ini sengaja ditambahkan agar laporan lengkap sebagai materi belajar.
 - Di backend, tolak URL dengan scheme selain `http/https` dan domain di luar allowlist.
 - Tambahkan header `Referrer-Policy: no-referrer` dan `Content-Security-Policy` untuk mengurangi dampak.
 
-### Project `evil redirect`
+### Project `evil-redirect`
 - Hapus project simulasi setelah demo selesai.
 - Jangan pernah menaruh form yang mengirim kredensial ke domain di luar aplikasi.
 - Edukasi pengguna: periksa hostname di address bar sebelum login.
@@ -204,7 +204,7 @@ Bagian ini sengaja ditambahkan agar laporan lengkap sebagai materi belajar.
 
 Perubahan di atas menciptakan dua kelas kerentanan yang mudah didemonstrasikan:
 
-1. **Open Redirect** — berada di project/deploy terpisah `evil redirect`, yang memuat salinan
+1. **Open Redirect** — berada di project/deploy terpisah `evil-redirect`, yang memuat salinan
    visual halaman login I/O Chat dan route `/redirect?url=...` tanpa validasi.
    Aplikasi `IO-Chat` sendiri sudah dibersihkan dari jalur redirect tersebut.
 2. **DoS** — event loop dapat diblokir melalui endpoint debug, ditambah rate limiting yang mati

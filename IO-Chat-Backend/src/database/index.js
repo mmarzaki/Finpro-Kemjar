@@ -6,8 +6,10 @@ dotenv.config();
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  // Add SSL if deploying to platforms like Heroku/Vercel that require it
-  // ssl: { rejectUnauthorized: false }
+  // Neon/Supabase mewajibkan SSL saat di-deploy (Vercel/production).
+  ssl: process.env.VERCEL === '1' || process.env.NODE_ENV === 'production'
+    ? { rejectUnauthorized: false }
+    : undefined
 });
 
 export const query = (text, params) => pool.query(text, params);
