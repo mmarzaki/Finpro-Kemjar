@@ -8,7 +8,11 @@ import { initDb } from './database/index.js';
 
 dotenv.config();
 
-initDb();
+// Di Vercel, tabel sudah dibuat lewat database_dump.sql di SQL Editor Neon.
+// Melewati initDb() menghindari query tambahan saat cold start.
+if (process.env.VERCEL !== '1') {
+  initDb();
+}
 
 const app = express();
 

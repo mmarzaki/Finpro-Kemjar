@@ -4,12 +4,17 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+const isServerless = process.env.VERCEL === '1' || process.env.NODE_ENV === 'production';
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   // Neon/Supabase mewajibkan SSL saat di-deploy (Vercel/production).
-  ssl: process.env.VERCEL === '1' || process.env.NODE_ENV === 'production'
-    ? { rejectUnauthorized: false }
-    : undefined
+  ssl: isServerless ? { rejectUnauthorized: false } : undefined,
+  // Jangan biarkan request menggantung sampai function timeout (504).
+  connectionTimeoutMillis: 10000,
+  query_timeout: 15000,
+  idleTimeoutMillis: 30000,
+  max: isServerless ? 1 : 10
 });
 
 export const query = (text, params) => pool.query(text, params);

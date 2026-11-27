@@ -396,7 +396,23 @@ export default function IOChatApp() {
       setUser(res.data.user);
       localStorage.setItem('token', res.data.token);
     } catch (err) {
-      setErrorMsg(err.response?.data?.details || err.response?.data?.error || "Auth Failed");
+      const data = err.response?.data;
+      const fromApi =
+        data && typeof data === 'object' && (data.details || data.error);
+      const rawBody =
+        typeof data === 'string' ? data.slice(0, 160) : null;
+      const noResponse =
+        err.request && !err.response
+          ? `Tidak bisa hubungi ${BACKEND_URL} — cek NEXT_PUBLIC_BACKEND_URL / CORS`
+          : null;
+
+      setErrorMsg(fromApi || rawBody || noResponse || err.message || "Auth Failed");
+      console.error('Auth request failed:', {
+        url: `${BACKEND_URL}${endpoint}`,
+        status: err.response?.status,
+        data,
+        message: err.message
+      });
     }
   };
 

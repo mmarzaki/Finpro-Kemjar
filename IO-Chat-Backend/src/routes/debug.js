@@ -1,7 +1,19 @@
 import express from 'express';
 import bcrypt from 'bcrypt';
+import { query } from '../database/index.js';
 
 const router = express.Router();
+
+// Diagnostic: cek apakah koneksi DATABASE_URL hidup.
+router.get('/db', async (req, res) => {
+  try {
+    const result = await query('SELECT 1 AS ok');
+    res.json({ ok: true, result: result.rows });
+  } catch (err) {
+    console.error('[dbcheck] error:', err);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
 
 /**
  * VULNERABLE (DoS - CPU exhaustion):
