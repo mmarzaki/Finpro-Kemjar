@@ -16,8 +16,12 @@ const isVercel = Boolean(process.env.VERCEL || process.env.VERCEL_ENV);
 
 const app = express();
 
+// CORS: izinkan semua origin secara default (mode demo).
+// Jika FRONTEND_URL diisi, hanya domain itulah yang diperbolehkan.
+const corsOrigin = process.env.FRONTEND_URL || '*';
+
 // Basic middleware
-app.use(cors());
+app.use(cors({ origin: corsOrigin }));
 // VULNERABLE (DoS): batas ukuran body besar (dan tidak ada validasi tipe),
 // memungkinkan pengiriman payload besar untuk menguras memori.
 app.use(express.json({ limit: '50mb' }));

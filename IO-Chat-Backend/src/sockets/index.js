@@ -7,7 +7,7 @@ const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 
 export function initializeSockets(httpServer) {
     const io = new Server(httpServer, {
-        cors: { origin: '*' },
+        cors: { origin: process.env.FRONTEND_URL || '*' },
         maxHttpBufferSize: 5e6 // 5MB to accommodate base64 overhead
     });
 

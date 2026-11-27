@@ -25,7 +25,7 @@ router.get('/ping', (req, res) => {
   }
 
   res.json({
-    version: 'serverless-v3',
+    version: 'serverless-v5',
     pong: true,
     vercel: process.env.VERCEL || null,
     hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
@@ -37,10 +37,14 @@ router.get('/ping', (req, res) => {
 // Diagnostic: cek apakah koneksi DATABASE_URL hidup.
 router.get('/db', async (req, res) => {
   try {
-    const result = await query('SELECT 1 AS ok');
+    // Pengaman ekstra: pastikan response keluar sebelum batas function Vercel.
+    const guard = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('DB check exceeded 6s')), 6000)
+    );
+    const result = await Promise.race([query('SELECT 1 AS ok'), guard]);
     res.json({ ok: true, result: result.rows });
   } catch (err) {
-    console.error('[dbcheck] error:', err);
+    console.error('[dbcheck] error:', err.message);
     res.status(500).json({ ok: false, error: err.message });
   }
 });

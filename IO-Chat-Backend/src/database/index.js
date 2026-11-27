@@ -12,8 +12,8 @@ const pool = new Pool({
   // Neon/Supabase mewajibkan SSL saat di-deploy (Vercel/production).
   ssl: isServerless ? { rejectUnauthorized: false } : undefined,
   // Jangan biarkan request menggantung sampai function timeout (504).
-  connectionTimeoutMillis: 10000,
-  query_timeout: 15000,
+  connectionTimeoutMillis: 3000,
+  query_timeout: 5000,
   idleTimeoutMillis: 30000,
   max: isServerless ? 5 : 10
 });

@@ -83,8 +83,10 @@ IO-Chat/
    |------|-------|
    | `DATABASE_URL` | `postgresql://<user>:<password>@<host>/<db>?sslmode=require` |
    | `JWT_SECRET` | string acak rahasia, misal `io-chat-secret-2026-xyz` |
+   | `FRONTEND_URL` *(opsional)* | `https://<project-frontend>.vercel.app` — membatasi CORS; tanpa ini semua origin diperbolehkan |
 
    > Jangan isi `PORT` — Vercel yang menentukan. `VERCEL=1` juga otomatis.
+   > `vercel.json` sudah mengatur `maxDuration: 10` untuk `api/index.js`.
 
 4. Klik **Deploy**.
 
@@ -212,7 +214,7 @@ Evil      → https://evil-redirect.vercel.app     (Root Directory: evil-redirec
 | Build backend gagal di `bcrypt` | Native module gagal compile. Ganti dependency ke `bcryptjs` (API `hash`/`compare` kompatibel) di `package.json` dan controller. |
 | `NEXT_PUBLIC_BACKEND_URL` tidak berubah | Set env var dulu → **Redeploy** (env vars di-inline saat build). |
 | Console browser banyak error `websocket` | Normal di Vercel — Socket.IO tidak didukung serverless. REST API tetap jalan. |
-| DoS `504 Gateway Timeout` | Request melebihi `maxDuration` (60 detik di `vercel.json`). Turunkan `cost`/`iterations`, atau anggap sebagai bukti DoS. |
+| `504 Gateway Timeout` | Request melebihi `maxDuration` (10 detik di `vercel.json`). Cek `/api/debug/db`, dan turunkan `cost`/`iterations` pada endpoint DoS. |
 | Dua project Vercel bentrok nama | Tiap project punya domain unik; bedakan Project Name saat import. |
 
 ---
