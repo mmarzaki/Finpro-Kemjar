@@ -4,15 +4,9 @@ import React, { useState, useEffect } from 'react';
 
 /**
  * Salinan visual halaman login/register I/O Chat.
- *
- * PERINGATAN ETIS:
- * Halaman ini adalah salinan untuk demonstrasi Open Redirect di lingkungan lokal.
- * Form TIDAK mengirim kredensial ke mana pun. Saat disubmit, halaman hanya
- * mengalihkan (redirect) pengguna sesuai parameter URL / tujuan default.
+ * Halaman ini tidak melakukan redirect ke mana pun: browser berhenti di sini
+ * sebagai bukti eksploitasi. Form tidak mengirim kredensial.
  */
-
-const IOCHAT_LOGIN_URL =
-  process.env.NEXT_PUBLIC_IOCHAT_LOGIN_URL || 'http://localhost:3000';
 
 const accentPalettes = {
   red: { 50: '#fef2f2', 100: '#fee2e2', 200: '#fecaca', 300: '#fca5a5', 400: '#f87171', 500: '#ef4444', 600: '#dc2626', 700: '#b91c1c', 800: '#991b1b', 900: '#7f1d1d' },
@@ -29,7 +23,7 @@ const accentPalettes = {
 
 export default function EvilLoginPage() {
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [selectedAccent, setSelectedAccent] = useState('red');
+  const [selectedAccent, setSelectedAccent] = useState('blue');
 
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
@@ -58,7 +52,7 @@ export default function EvilLoginPage() {
     }
   }, [isDarkMode]);
 
-  const activePalette = accentPalettes[selectedAccent] || accentPalettes.red;
+  const activePalette = accentPalettes[selectedAccent] || accentPalettes.blue;
   const themeVars = {
     '--app-accent-50': activePalette[50],
     '--app-accent-100': activePalette[100],
@@ -74,18 +68,7 @@ export default function EvilLoginPage() {
 
   const handleAuth = (e) => {
     e.preventDefault();
-    setErrorMsg("");
-
-    // VULNERABLE: Open Redirect — URL tujuan diambil dari query string
-    // tanpa validasi origin/domain. Tidak ada kredensial yang dikirim.
-    const params = new URLSearchParams(window.location.search);
-    const redirectUrl =
-      params.get('redirect') ||
-      params.get('next') ||
-      params.get('url') ||
-      IOCHAT_LOGIN_URL;
-
-    window.location.href = redirectUrl;
+    setErrorMsg("Demo only — kredensial tidak dikirim dan halaman tetap di sini.");
   };
 
   return (
@@ -94,9 +77,9 @@ export default function EvilLoginPage() {
       style={themeVars}
     >
       <div className="bg-white dark:bg-[#1e1e1e] rounded-2xl shadow-2xl w-96 border border-gray-100 dark:border-gray-800 overflow-hidden animate-in fade-in zoom-in duration-200">
-        <div className="h-32 bg-red-600 flex flex-col items-center justify-center p-6 text-white text-center relative">
+        <div className="h-32 bg-blue-600 flex flex-col items-center justify-center p-6 text-white text-center relative">
           <h2 className="text-3xl font-black tracking-tight drop-shadow-md">
-            I/O Chat
+            I/O Chat EVILLL
           </h2>
           <p className="text-sm font-medium text-white/95 mt-1">
             {isLogin ? "Welcome back!" : "Create an account"}
@@ -109,7 +92,7 @@ export default function EvilLoginPage() {
               type="email"
               placeholder="Email"
               value={email} onChange={e => setEmail(e.target.value)}
-              className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl text-black dark:bg-[#2a2a2a] dark:text-white focus:outline-none focus:border-red-500"
+              className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl text-black dark:bg-[#2a2a2a] dark:text-white focus:outline-none focus:border-blue-500"
               required
             />
             {!isLogin && (
@@ -117,7 +100,7 @@ export default function EvilLoginPage() {
                 type="text"
                 placeholder="Username"
                 value={username} onChange={e => setUsername(e.target.value)}
-                className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl text-black dark:bg-[#2a2a2a] dark:text-white focus:outline-none focus:border-red-500"
+                className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl text-black dark:bg-[#2a2a2a] dark:text-white focus:outline-none focus:border-blue-500"
                 required
               />
             )}
@@ -125,18 +108,18 @@ export default function EvilLoginPage() {
               type="password"
               placeholder="Password"
               value={password} onChange={e => setPassword(e.target.value)}
-              className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl text-black dark:bg-[#2a2a2a] dark:text-white focus:outline-none focus:border-red-500"
+              className="w-full p-3 border border-gray-200 dark:border-gray-700 rounded-xl text-black dark:bg-[#2a2a2a] dark:text-white focus:outline-none focus:border-blue-500"
               required
             />
             <button
               type="submit"
-              className="w-full py-3.5 text-white bg-red-600 hover:bg-red-700 font-extrabold rounded-xl shadow-md transition-all active:scale-[0.98]"
+              className="w-full py-3.5 text-white bg-blue-600 hover:bg-blue-700 font-extrabold rounded-xl shadow-md transition-all active:scale-[0.98]"
             >
-              {isLogin ? "Login" : "Register"}
+              {isLogin ? "we luv your data" : "Register"}
             </button>
           </form>
           <p
-            className="mt-6 text-sm text-center text-red-600 hover:text-red-700 font-bold cursor-pointer transition-all hover:underline"
+            className="mt-6 text-sm text-center text-blue-600 hover:text-blue-700 font-bold cursor-pointer transition-all hover:underline"
             onClick={() => setIsLogin(!isLogin)}
           >
             {isLogin ? "Need an account? Register" : "Already have an account? Login"}
